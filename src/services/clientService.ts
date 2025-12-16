@@ -2,6 +2,18 @@ import api from './api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import type { ApiResponse, Client } from '@/types';
 
+
+/**
+ * Type pour la création d'un client
+ */
+type CreateClientDTO = {
+  name: string;
+  email: string;
+  numIdentiteFiscal: string;
+  tel: string;
+  address: string;
+};
+
 /**
  * Service pour gérer les clients
  */
@@ -39,7 +51,8 @@ export const clientService = {
   /**
    * Crée un nouveau client
    */
-  async createClient(data: Client): Promise<Client> {
+  async createClient(data: CreateClientDTO): Promise<Client> {
+    try{
     const response = await api.post<ApiResponse<Client>>(
       API_ENDPOINTS.CLIENTS.LIST,
       data
@@ -50,6 +63,11 @@ export const clientService = {
     }
 
     return response.data.data;
+    } catch (error: any) {
+      console.error('Create client error:', error);
+      throw error;
+    }
+
   },
 
   /**

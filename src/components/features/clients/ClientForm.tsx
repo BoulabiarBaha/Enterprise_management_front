@@ -37,6 +37,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     name: '',
     email: '',
     address: '',
+    numIdentiteFiscal: '',
     tel: '',
   });
 
@@ -51,8 +52,9 @@ export const ClientForm: React.FC<ClientFormProps> = ({
       setFormData({
         name: client.name,
         email: client.email,
-        address: client.address,
-        tel: client.tel,
+        address: client.address || '',
+        numIdentiteFiscal: client.numIdentiteFiscal || '',
+        tel: client.tel || ''
       });
     } else {
       // Reset en mode création
@@ -60,6 +62,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         name: '',
         email: '',
         address: '',
+        numIdentiteFiscal: '',
         tel: '',
       });
     }
@@ -92,16 +95,27 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+      // Nom requis
     if (!formData.name.trim()) {
       newErrors.name = 'Le nom est requis';
     }
 
-    if (!formData.email) {
-      newErrors.email = 'L email est requis';
+    // Email requis et valide
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = "L'email est requis";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Format email invalide';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'L adresse est requise';
+    // Numéro fiscal requis
+    if (!formData.numIdentiteFiscal.trim()) {
+      newErrors.numIdentiteFiscal = 'Le numéro fiscal est requis';
+    }
+
+    // Téléphone (optionnel mais format si fourni)
+    if (formData.tel && !/^\+?[\d\s-()]+$/.test(formData.tel)) {
+      newErrors.tel = 'Format téléphone invalide';
     }
 
     setErrors(newErrors);
@@ -120,31 +134,38 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     }
 
     try {
-    //   const data: ProductRequest = {
-    //     name: formData.name.trim(),
-    //     unitPrice: parseFloat(formData.unitPrice),
-    //     description: formData.description.trim(),
-    //     supplier: formData.supplier.trim(),
-    //   };
+      const data = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        numIdentiteFiscal: formData.numIdentiteFiscal.trim(),
+        tel: formData.tel.trim(),
+        address: formData.address.trim(),
+      };
 
-    //   if (product) {
-    //     // Mode édition
-    //     await updateProduct(product.id, {
-    //       ...product,
-    //       ...data,
-    //     });
-    //   } else {
-    //     // Mode création
-    //     await createProduct(data);
-    //   }
-
-    //   onSuccess?.();
-    //   onClose();
+      if (client) {
+        const result = await updateClient(client.id, {
+          ...client,
+          ...data,
+        });
+        console.log('Client updated:', result);
+      } else {
+        const result = await createClient(data);
+        console.log('Client created:', result);
+      }
+      // Si on arrive ici, c'est que ça a réussi
+      onSuccess?.();
+      onClose();
+ 
     } catch (error: any) {
-      setSubmitError(
-        error.response?.data?.message ||
-        `Erreur lors de ${client ? 'la modification' : 'la création'} du client`
-      );
+     console.error('Form submit error:', error);
+      
+      const errorMsg = error.response?.data?.message ||
+                      error.message ||
+                      `Erreur lors de ${client ? 'la modification' : 'la création'} du client`;
+      
+      setSubmitError(errorMsg);
+      
+      // Ne pas fermer le modal en cas d'erreur
     }
   };
 
@@ -163,50 +184,67 @@ export const ClientForm: React.FC<ClientFormProps> = ({
           </div>
         )}
 
-        {/* Nom du client */}   
-        <Input
-          label="Nom du client *"
-          type="text"
-          value={formData.name}
-          onChange={handleChange('name')}
-          error={errors.name}
-          placeholder="Ex: Client XYZ"
-          disabled={isLoading}
-        />
+       {/* Grille 2 colonnes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nom */}
+          <Input
+            label="Nom *"
+            type="text"
+            value={formData.name}
+            onChange={handleChange('name')}
+            error={errors.name}
+            placeholder="Ex: ABC Corporation"
+            disabled={isLoading}
+          />
 
-        {/* Mail */}
-        <Input
-          label="L'adresse electronique du client"
-          type="text"
-          step="0.01"
-          value={formData.email}
-          onChange={handleChange('email')}
-          error={errors.email}
-          placeholder="Ex: client@example.com"
-          disabled={isLoading}
-        />
+          {/* Email */}
+          <Input
+            label="Email *"
+            type="email"
+            value={formData.email}
+            onChange={handleChange('email')}
+            error={errors.email}
+            placeholder="contact@abc.com"
+            disabled={isLoading}
+          />
 
-        {/* Address */}
-        <Input
-          label="Addresse *"
-          type="text"
-          value={formData.address}
-          onChange={handleChange('address')}
-          error={errors.address}
-          placeholder="Ex: 20, Rue de la Paix, 75001 Paris"
-          disabled={isLoading}
-        />
+          {/* Numéro fiscal */}
+          <Input
+            label="Numéro d'identité fiscale *"
+            type="text"
+            value={formData.numIdentiteFiscal}
+            onChange={handleChange('numIdentiteFiscal')}
+            error={errors.numIdentiteFiscal}
+            placeholder="Ex: 1234567A"
+            disabled={isLoading}
+          />
 
-        {/* Tel */}
-        <Input
-          label="Numéro de téléphone *"
-          type="text"
-          value={formData.tel}
-          onChange={handleChange('tel')}
-          error={errors.tel}
-          placeholder="Ex: +21612345678"
-          disabled={isLoading}
-        />
+          {/* Téléphone */}
+          <Input
+            label="Téléphone"
+            type="tel"
+            value={formData.tel}
+            onChange={handleChange('tel')}
+            error={errors.tel}
+            placeholder="+216 12 345 678"
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Adresse (pleine largeur) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Adresse
+          </label>
+          <textarea
+            value={formData.address}
+            onChange={handleChange('address')}
+            placeholder="Adresse complète du client"
+            disabled={isLoading}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
+          />
+        </div>
 
         {/* Footer avec boutons */}
         <DialogFooter>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import type { Client } from '@/types';
 import { Dialog, DialogFooter } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { useClientStore } from '@/stores/clientStore';
+import type { Client } from '@/types';
+
 /**
  * Props du DeleteClientDialog
  */
@@ -15,24 +16,16 @@ interface DeleteClientDialogProps {
 
 /**
  * Dialog de confirmation de suppression
- * 
- * Features:
- * - Affiche le nom du client à supprimer
- * - Confirmation explicite
- * - Gestion des erreurs
  */
 export const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
   isOpen,
+  onClose,
   client,
   onSuccess,
-  onClose
 }) => {
   const { deleteClient, isLoading } = useClientStore();
   const [error, setError] = useState('');
-  
-   /**
-   * Gère la suppression
-   */
+
   const handleDelete = async () => {
     if (!client) return;
 
@@ -60,7 +53,6 @@ export const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
       size="sm"
     >
       <div className="space-y-4">
-        {/* Message d'avertissement */}
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <svg
@@ -83,29 +75,30 @@ export const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
             </h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Êtes-vous sûr de vouloir supprimer le client{' '}
-              <span className="font-semibold">"{client?.name}"</span> ?
+              <span className="font-semibold">"{client.name}"</span> ?
             </p>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Cette action est irréversible.
+              Cette action supprimera également toutes les transactions et factures associées.
+            </p>
+            <p className="mt-2 text-sm text-red-600 font-medium">
+              Cette action est irréversible.
             </p>
           </div>
         </div>
-            
-         {/* Erreur */}
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             <p className="text-sm">{error}</p>
           </div>
         )}
-            
-        {/* Boutons */}
+
         <DialogFooter>
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            >
+          >
             Annuler
           </Button>
           <Button
@@ -119,7 +112,5 @@ export const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
         </DialogFooter>
       </div>
     </Dialog>
-    
-            
   );
 };

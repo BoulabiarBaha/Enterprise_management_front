@@ -3,6 +3,17 @@ import { clientService } from '@/services/clientService';
 import type { Client } from '@/types';
 
 /**
+ * Type pour la création d'un client (sans les champs auto-générés)
+ */
+type CreateClientDTO = {
+  name: string;
+  email: string;
+  numIdentiteFiscal: string;
+  tel: string;
+  address: string;
+};
+
+/**
  * Interface du store de produits
  */
 interface ClientState {
@@ -14,7 +25,7 @@ interface ClientState {
 
   // Actions
   fetchClients: () => Promise<void>;
-  createClient: (data: Client) => Promise<Client>;
+  createClient: (data: CreateClientDTO) => Promise<Client>;
   updateClient: (id: string, data: Client) => Promise<Client>;
   deleteClient: (id: string) => Promise<void>;
   setSelectedClient: (client: Client | null) => void;
@@ -58,22 +69,28 @@ export const useClientStore = create<ClientState>((set) => ({
   /**
    * Crée un nouveau produit
    */
-  createClient: async (data: Client) => {
+  createClient: async (data) => {
     set({ isLoading: true, error: null });
 
     try {
-      const newclient = await clientService.createClient(data);
+      const newClient = await clientService.createClient(data);
       
-      // Ajoute le nouveau produit à la liste
+      // Ajoute le nouveau client à la liste
       set((state) => ({
-        clients: [...state.clients, newclient],
+        clients: [...state.clients, newClient],
         isLoading: false,
+        error: null,
       }));
 
-      return newclient;
+      return newClient;
     } catch (error: any) {
+            console.error('Store createClient error:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Erreur lors de la création du client';
       set({
-        error: error.response?.data?.message || 'Erreur lors de la création du client',
+        error: errorMessage,
         isLoading: false,
       });
       throw error;
