@@ -8,6 +8,8 @@ import { ProtectedRoute } from '@/components/features/auth/ProtectedRoute';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ROUTES } from '@/lib/constants';
 import { ClientsPage } from './pages/ClientsPage';
+import { TransactionsPage } from './pages/TransactionsPage';
+import { BillingsPage } from './pages/BillingsPage';
 
 /**
  * Page temporaire pour les routes non implémentées
@@ -87,7 +89,7 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout>
-                <ComingSoonPage title="Transactions" />
+                <TransactionsPage />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -98,7 +100,7 @@ function App() {
           element={
             <ProtectedRoute>
               <MainLayout>
-                <ComingSoonPage title="Factures" />
+                <BillingsPage />
               </MainLayout>
             </ProtectedRoute>
           }
