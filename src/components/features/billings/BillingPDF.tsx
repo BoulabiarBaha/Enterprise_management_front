@@ -1,16 +1,15 @@
-import React from 'react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Billing, Transaction, Client, Product } from '@/types';
 
 /**
  * Props pour le composant PDF
  */
-interface BillingPDFProps {
-  billing: Billing;
-  transaction: Transaction;
-  client: Client;
-  products: Product[];
-}
+// interface BillingPDFProps {
+//   billing: Billing;
+//   transaction: Transaction;
+//   client: Client;
+//   products: Product[];
+// }
 
 /**
  * Génère le contenu HTML de la facture pour impression/PDF
