@@ -50,6 +50,9 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `/billing/${id}`,
     BY_TRANSACTION: (transactionId: string) => `/billing/transactions/${transactionId}/billing`,
   },
+  STATS: {
+    DASHBOARD: '/stats/dashboard',
+  },
 } as const;
 
 // User Roles

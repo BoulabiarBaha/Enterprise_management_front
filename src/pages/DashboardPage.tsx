@@ -1,22 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAuthStore } from '@/stores/authStore';
 import { ROUTES } from '@/lib/constants';
+import { useStatsStore } from '@/stores/statsStore';
 
 /**
  * Composant StatCard - Carte de statistique
  */
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: number | undefined;
   change: string;
   isPositive: boolean;
+  descriptionSpan: string;
   icon: React.ReactNode;
   iconBgColor: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, change, isPositive, icon, iconBgColor }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, change, isPositive, descriptionSpan, icon, iconBgColor }) => {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
@@ -33,7 +35,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, isPositive, i
                 {isPositive ? '↑' : '↓'} {change}
               </span>
               <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                vs mois dernier
+                {descriptionSpan}
               </span>
             </div>
           </div>
@@ -58,12 +60,19 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, isPositive, i
 export const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { stats, isLoading, error, fetchStats } = useStatsStore();
 
-  // Données mockées (à remplacer par des vraies données depuis l'API)
-  const stats = [
+  /**
+   * Charge les statistiques au montage
+   */
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const statsData = [
     {
       title: 'Total Produits',
-      value: '124',
+      value: stats?.totalProducts || 0,
       change: '+12%',
       isPositive: true,
       icon: (
@@ -72,11 +81,12 @@ export const DashboardPage: React.FC = () => {
         </svg>
       ),
       iconBgColor: 'bg-blue-500',
+      descriptionSpan: 'vs mois dernier',
     },
     {
       title: 'Clients Actifs',
-      value: '48',
-      change: '+8%',
+      value: stats?.activeClients,
+      change: `${stats?.clientConversionRate || 0}%`,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,11 +94,12 @@ export const DashboardPage: React.FC = () => {
         </svg>
       ),
       iconBgColor: 'bg-green-500',
+      descriptionSpan: 'taux de conversion',
     },
     {
       title: 'Transactions',
-      value: '256',
-      change: '+23%',
+      value: stats?.totalTransactions,
+      change: `${stats?.repurchaseRate || 0}%`,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,18 +107,20 @@ export const DashboardPage: React.FC = () => {
         </svg>
       ),
       iconBgColor: 'bg-purple-500',
+      descriptionSpan: `taux de réachat`,
     },
     {
-      title: 'Chiffre d\'Affaires',
-      value: '45.2K TND',
-      change: '+18%',
-      isPositive: true,
+      title: `Chiffre d'Affaires`,
+      value: stats?.totalRevenue,
+      change: `+${stats?.revenueChange || 0}%`,
+      isPositive: stats?.revenueChange == undefined || stats?.revenueChange >= 0 ? true : false,
       icon: (
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       iconBgColor: 'bg-orange-500',
+      descriptionSpan: 'vs dernier mois',
     },
   ];
 
@@ -164,11 +177,38 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {isLoading ? (
+          // Loading skeleton
+          Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2" />
+                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16 mt-2" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 mt-2" />
+                  </div>
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : error ? (
+          // Error state
+          <div className="col-span-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+              <p className="text-sm">{error}</p>
+            </div>
+          </div>
+        ) : (
+          // Stats cards
+          statsData.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))
+        )}
       </div>
+
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
