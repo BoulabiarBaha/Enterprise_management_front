@@ -86,7 +86,7 @@ export const DashboardPage: React.FC = () => {
     {
       title: 'Clients Actifs',
       value: stats?.activeClients,
-      change: `${stats?.clientConversionRate || 0}%`,
+      change: `${stats?.clientConversionRate.toFixed(2) || 0}%`,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
