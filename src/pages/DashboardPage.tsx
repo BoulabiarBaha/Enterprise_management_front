@@ -99,7 +99,7 @@ export const DashboardPage: React.FC = () => {
     {
       title: 'Transactions',
       value: stats?.totalTransactions,
-      change: `${stats?.repurchaseRate || 0}%`,
+      change: `${stats?.repurchaseRate.toFixed(2) || 0}%`,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
