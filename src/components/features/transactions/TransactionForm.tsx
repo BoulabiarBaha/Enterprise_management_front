@@ -48,7 +48,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [currentProductId, setCurrentProductId] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState('1');
   const [currentNote, setCurrentNote] = useState('');
-  
+  const [enableTax, setEnableTax] = useState(true);
+  const [tvaRate, setTvaRate] = useState('19');
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
 
@@ -72,6 +74,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       setCurrentProductId('');
       setCurrentQuantity('1');
       setCurrentNote('');
+      setEnableTax(true);
+      setTvaRate('19');
       setErrors({});
       setSubmitError('');
     }
@@ -152,13 +156,23 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   };
 
   /**
-   * Calcule le total
+   * Calcule le total HT
    */
   const calculateTotal = () => {
     return selectedProducts.reduce(
       (sum, product) => sum + product.unitPrice * product.quantity,
       0
     );
+  };
+
+  /**
+   * Calcule le total TTC
+   */
+  const calculateTotalTTC = () => {
+    const totalHT = calculateTotal();
+    if (!enableTax) return totalHT;
+    const tva = parseFloat(tvaRate) / 100;
+    return totalHT + totalHT * tva;
   };
 
   /**
@@ -181,6 +195,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     }
 
     try {
+      const tva = enableTax ? parseFloat(tvaRate) / 100 : 0;
       await createTransaction({
         clientId: selectedClientId,
         soldProducts: selectedProducts.map(({ productId, quantity, note }) => ({
@@ -188,6 +203,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           quantity,
           note,
         })),
+        enableTax,
+        tva,
       });
 
       onSuccess?.();
@@ -368,13 +385,69 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           )}
         </div>
 
+        {/* TVA Section */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              TVA
+            </h3>
+            <label className="flex items-center cursor-pointer">
+              <span className="mr-3 text-sm text-gray-700 dark:text-gray-300">
+                {enableTax ? 'Activée' : 'Désactivée'}
+              </span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={enableTax}
+                  onChange={(e) => setEnableTax(e.target.checked)}
+                  disabled={isLoading}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+              </div>
+            </label>
+          </div>
+
+          {enableTax && (
+            <div className="flex items-center space-x-3">
+              <label className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                Taux de TVA (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={tvaRate}
+                onChange={(e) => setTvaRate(e.target.value)}
+                disabled={isLoading}
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              />
+            </div>
+          )}
+        </div>
+
         {/* Total */}
         {selectedProducts.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex justify-between items-center text-xl font-bold">
-              <span className="text-gray-900 dark:text-white">Total :</span>
-              <span className="text-green-600 dark:text-green-400">
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Total HT :</span>
+              <span className="font-medium text-gray-900 dark:text-white">
                 {formatCurrency(calculateTotal())}
+              </span>
+            </div>
+            {enableTax && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">TVA ({tvaRate}%) :</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(calculateTotal() * parseFloat(tvaRate || '0') / 100)}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-xl font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
+              <span className="text-gray-900 dark:text-white">Total TTC :</span>
+              <span className="text-green-600 dark:text-green-400">
+                {formatCurrency(calculateTotalTTC())}
               </span>
             </div>
           </div>

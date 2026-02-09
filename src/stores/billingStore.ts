@@ -13,6 +13,7 @@ interface BillingState {
 
   // Actions
   fetchBillingByTransactionId: (transactionId: string) => Promise<Billing>;
+  fetchBillingsForTransactions: (transactionIds: string[]) => Promise<void>;
   clearError: () => void;
 }
 
@@ -58,6 +59,35 @@ export const useBillingStore = create<BillingState>((set, get) => ({
         isLoading: false,
       });
       throw error;
+    }
+  },
+
+  /**
+   * Récupère les factures pour une liste de transactions
+   */
+  fetchBillingsForTransactions: async (transactionIds: string[]) => {
+    const uncachedIds = transactionIds.filter((id) => !get().billings.has(id));
+    if (uncachedIds.length === 0) return;
+
+    set({ isLoading: true, error: null });
+
+    try {
+      const results = await Promise.all(
+        uncachedIds.map((id) => billingService.getBillingByTransactionId(id).then((billing) => ({ id, billing })))
+      );
+
+      set((state) => {
+        const newBillings = new Map(state.billings);
+        results.forEach(({ id, billing }) => {
+          newBillings.set(id, billing);
+        });
+        return { billings: newBillings, isLoading: false };
+      });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || 'Erreur lors du chargement des factures',
+        isLoading: false,
+      });
     }
   },
 

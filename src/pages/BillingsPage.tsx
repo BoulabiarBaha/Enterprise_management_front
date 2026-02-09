@@ -13,12 +13,14 @@ import {
 import { BillingDetailModal } from '@/components/features/billings/BillingDetailModal';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { useClientStore } from '@/stores/clientStore';
+import { useBillingStore } from '@/stores/billingStore';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Transaction } from '@/types';
 
 export const BillingsPage: React.FC = () => {
   const { transactions, isLoading, error, fetchTransactions } = useTransactionStore();
   const { clients, fetchClients } = useClientStore();
+  const { billings, fetchBillingsForTransactions } = useBillingStore();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -28,6 +30,14 @@ export const BillingsPage: React.FC = () => {
     fetchTransactions();
     fetchClients();
   }, [fetchTransactions, fetchClients]);
+
+  // Récupérer les données de facturation réelles
+  useEffect(() => {
+    const ids = transactions.filter((t) => t.billingId).map((t) => t.id);
+    if (ids.length > 0) {
+      fetchBillingsForTransactions(ids);
+    }
+  }, [transactions, fetchBillingsForTransactions]);
 
   // Filtre les transactions qui ont une facture
   const transactionsWithBilling = transactions.filter((t) => t.billingId);
@@ -55,10 +65,16 @@ export const BillingsPage: React.FC = () => {
     return client?.name || 'Client inconnu';
   };
 
-  // Statistiques
+  // Statistiques basées sur les données réelles de facturation
   const totalBillings = transactionsWithBilling.length;
-  const totalAmount = transactionsWithBilling.reduce((sum, t) => sum + t.totalPrice, 0);
-  const totalWithTax = totalAmount * 1.19; // Assuming 19% tax
+  const totalAmount = transactionsWithBilling.reduce((sum, t) => {
+    const billing = billings.get(t.id);
+    return sum + (billing?.totalHT ?? t.totalPrice);
+  }, 0);
+  const totalWithTax = transactionsWithBilling.reduce((sum, t) => {
+    const billing = billings.get(t.id);
+    return sum + (billing?.totalTTC ?? t.totalPrice);
+  }, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -203,9 +219,11 @@ export const BillingsPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               {filteredTransactions.map((transaction) => {
-                const totalHT = transaction.totalPrice;
-                const tva = totalHT * 0.19;
-                const totalTTC = totalHT + tva;
+                const billing = billings.get(transaction.id);
+                const totalHT = billing?.totalHT ?? transaction.totalPrice;
+                const tvaAmount = billing ? (billing.enableTax ? billing.totalTTC - billing.totalHT : 0) : 0;
+                const totalTTC = billing?.totalTTC ?? transaction.totalPrice;
+                const tvaLabel = billing ? (billing.enableTax ? `${(billing.tva * 100).toFixed(0)}%` : '—') : '—';
 
                 return (
                   <TableRow key={transaction.id}>
@@ -227,7 +245,8 @@ export const BillingsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {formatCurrency(tva)}
+                        {formatCurrency(tvaAmount)}
+                        <span className="text-gray-400 ml-1">({tvaLabel})</span>
                       </span>
                     </TableCell>
                     <TableCell>

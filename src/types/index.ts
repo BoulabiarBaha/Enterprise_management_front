@@ -95,6 +95,8 @@ export interface SoldProduct {
 export interface TransactionRequest {
   clientId: string;
   soldProducts: SoldProduct[];
+  enableTax: boolean;
+  tva: number;
 }
 
 // Billing types
