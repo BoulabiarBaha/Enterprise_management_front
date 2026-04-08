@@ -16,12 +16,19 @@ export interface DashboardStatsDto extends UserStatsDto {
   averageTransactionValue: number;
   clientConversionRate: number;
   repurchaseRate: number;
+  productCoverageRate: number;
   monthlyRevenue?: MonthlyRevenueDto[] | null;
+  monthlyClients?: MonthlyClientsDto[] | null;
 }
 
 export interface MonthlyRevenueDto {
   month?: string | null;
   revenue: number;
+}
+
+export interface MonthlyClientsDto {
+  month?: string | null;
+  count: number;
 }
 /**
  * Service pour récupérer les statistiques
@@ -37,14 +44,6 @@ export const statsService = {
         throw new Error(response.data.message || 'Failed to retrieve dashboard stats');
       } 
       const responseStats = response.data.data
-      let revenueDifference: number = 0;
-      if (responseStats.monthlyRevenue.length >= 2) 
-      {
-        const lastIndex = responseStats.monthlyRevenue.length - 1;
-        revenueDifference = responseStats.monthlyRevenue[lastIndex].revenue - responseStats.monthlyRevenue[lastIndex - 1].revenue;
-      } else {
-        revenueDifference = 0;
-      }
       return {
         totalProducts: responseStats.totalProducts || 0,
         totalClients: responseStats.totalClients || 0,
@@ -54,8 +53,10 @@ export const statsService = {
         averageTransactionValue: responseStats.averageTransactionValue || 0,
         clientConversionRate: responseStats.clientConversionRate || 0,
         repurchaseRate: responseStats.repurchaseRate || 0,
+        productCoverageRate: responseStats.productCoverageRate || 0,
         monthlyRevenue: responseStats.monthlyRevenue || [],
-        revenueChange: revenueDifference,
+        monthlyClients: responseStats.monthlyClients || [],
+        revenueChange: responseStats.revenueChangePercent || 0,
       };
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);

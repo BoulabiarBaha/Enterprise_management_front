@@ -270,7 +270,6 @@ export const generateBillingHTML = (
         <div class="party-details">
           <p><strong>Référence:</strong> ${billing.reference}</p>
           <p><strong>Date:</strong> ${formatDate(billing.date, 'dd/MM/yyyy')}</p>
-          <p><strong>Transaction:</strong> #${transaction.id.substring(0, 8)}</p>
         </div>
       </div>
     </div>

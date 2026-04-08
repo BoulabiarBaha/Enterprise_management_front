@@ -10,6 +10,7 @@ import { ROUTES } from '@/lib/constants';
 import { ClientsPage } from './pages/ClientsPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { BillingsPage } from './pages/BillingsPage';
+import { FournisseursPage } from './pages/FournisseursPage';
 
 
 /**
@@ -79,6 +80,17 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <BillingsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={ROUTES.FOURNISSEURS}
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <FournisseursPage />
               </MainLayout>
             </ProtectedRoute>
           }

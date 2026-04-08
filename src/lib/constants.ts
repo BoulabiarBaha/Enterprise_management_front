@@ -18,6 +18,7 @@ export const ROUTES = {
   CLIENTS: '/clients',
   TRANSACTIONS: '/transactions',
   BILLINGS: '/billings',
+  FOURNISSEURS: '/fournisseurs',
 } as const;
 
 // API Endpoints
@@ -49,6 +50,11 @@ export const API_ENDPOINTS = {
     LIST: '/billing',
     DETAIL: (id: string) => `/billing/${id}`,
     BY_TRANSACTION: (transactionId: string) => `/billing/transactions/${transactionId}/billing`,
+  },
+  FOURNISSEURS: {
+    MY_FOURNISSEURS: '/fournisseurs/my-fournisseurs',
+    LIST: '/fournisseurs',
+    DETAIL: (id: string) => `/fournisseurs/${id}`,
   },
   STATS: {
     DASHBOARD: '/stats/dashboard',

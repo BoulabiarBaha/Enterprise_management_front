@@ -110,6 +110,25 @@ export interface Billing {
   enableTax: boolean;
 }
 
+// Fournisseur types
+export interface Fournisseur {
+  id: string;
+  name: string;
+  email: string;
+  tel: string;
+  address: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FournisseurRequest {
+  name: string;
+  email: string;
+  tel?: string;
+  address?: string;
+}
+
 // UI State types
 export interface Toast {
   id: string;

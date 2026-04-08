@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dialog, DialogFooter } from '@/components/ui/Dialog';
 import { useProductStore } from '@/stores/productStore';
+import { useFournisseurStore } from '@/stores/fournisseurStore';
 import type { Product, ProductRequest } from '@/types';
 
 /**
@@ -31,6 +32,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onSuccess,
 }) => {
   const { createProduct, updateProduct, isLoading } = useProductStore();
+  const { fournisseurs, fetchFournisseurs } = useFournisseurStore();
 
   // État du formulaire
   const [formData, setFormData] = useState({
@@ -42,6 +44,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
+
+  /**
+   * Charge les fournisseurs au montage
+   */
+  useEffect(() => {
+    fetchFournisseurs();
+  }, [fetchFournisseurs]);
 
   /**
    * Initialise le formulaire avec les données du produit (mode édition)
@@ -192,15 +201,32 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         />
 
         {/* Fournisseur */}
-        <Input
-          label="Fournisseur *"
-          type="text"
-          value={formData.supplier}
-          onChange={handleChange('supplier')}
-          error={errors.supplier}
-          placeholder="Ex: Dell Technologies"
-          disabled={isLoading}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Fournisseur *
+          </label>
+          <select
+            value={formData.supplier}
+            onChange={(e) => {
+              setFormData((prev) => ({ ...prev, supplier: e.target.value }));
+              if (errors.supplier) {
+                setErrors((prev) => ({ ...prev, supplier: '' }));
+              }
+            }}
+            disabled={isLoading}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="">Sélectionner un fournisseur</option>
+            {fournisseurs.map((f) => (
+              <option key={f.id} value={f.name}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+          {errors.supplier && (
+            <p className="mt-1 text-sm text-red-600">{errors.supplier}</p>
+          )}
+        </div>
 
         {/* Description */}
         <div>

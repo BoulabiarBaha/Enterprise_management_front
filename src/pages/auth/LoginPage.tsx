@@ -64,7 +64,7 @@ export const LoginPage: React.FC = () => {
       <Card className="w-full max-w-md">
         {/* Header */}
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl">Billy</CardTitle>
+          <CardTitle className="text-3xl">Gestion Pro</CardTitle>
           <p className="text-gray-600">
             Votre assistant de travail qui gère tous !
           </p>

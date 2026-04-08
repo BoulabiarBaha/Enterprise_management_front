@@ -45,7 +45,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <footer className="border-t border-gray-200 dark:border-gray-800 py-4 px-6">
           <div className="mx-auto max-w-7xl">
             <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              © 2025 Billy. Tous droits réservés.
+              © 2026 Gestion Pro. Tous droits réservés.
             </p>
           </div>
         </footer>
